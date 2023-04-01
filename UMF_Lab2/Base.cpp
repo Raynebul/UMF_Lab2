@@ -3,10 +3,11 @@
 double f_elem_method::fun(double x, double u)
 {
 	// Сходимость
-	return 5;                               // U = const
+	return x;                               // U = const
 	//return u;                             // U = x
 }
 
+// Производная
 double f_elem_method::d_fun(double x, double x1, double x2, double q1, double q2, int num)
 {
 	double h_x = x2 - x1;
@@ -18,12 +19,12 @@ double f_elem_method::d_fun(double x, double x1, double x2, double q1, double q2
 	{
 	case 1:// производная по первой переменной
 		//численная производная
-		res = 0;
+		res = 1;
 		//res = psi1; // f = u
 		break;
 
 	case 2: //производная по 2 переменной
-		res = 0;
+		res = 1;
 		//res = psi2; // f = u
 		break;
 
@@ -32,16 +33,20 @@ double f_elem_method::d_fun(double x, double x1, double x2, double q1, double q2
 	}
 	return res;
 }
+
+// Гамма
 double f_elem_method::gamma(double x)
 {
 	return 1;
 }
 
+// Лямбда
 double f_elem_method::lambda(double x)
 {
 	return 1;
 }
 
+// Создание сетки
 int f_elem_method::Create_grid(string filename)
 {
 	ifstream in(filename);
@@ -53,10 +58,12 @@ int f_elem_method::Create_grid(string filename)
 
 	in >> grid[0];
 
+	// сетка только по x, так как одномерная
 	for (int curr_count_x = 0; curr_count_x < count_x - 1; )
 	{
 		in >> X >> N_x >> k_x;
 		double h_x;
+		// если равномерная сетка
 		if (k_x == 1)
 		{
 			h_x = (X - grid[curr_count_x]) / N_x;
@@ -64,6 +71,7 @@ int f_elem_method::Create_grid(string filename)
 				grid[curr_count_x + p] = grid[curr_count_x] + h_x * p;
 			curr_count_x += N_x;
 		}
+		// если неравномерная
 		else
 		{
 			h_x = (X - grid[curr_count_x]) * (k_x - 1) / (pow(k_x, N_x) - 1);
@@ -94,6 +102,7 @@ int f_elem_method::Create_grid(string filename)
 	return 0;
 }
 
+// Матрица масс
 int f_elem_method::M_Loc_Matrix(double h, double gamma, vector<vector<double>>& M_loc)
 {
 	double k = gamma * h / 6;
@@ -104,6 +113,7 @@ int f_elem_method::M_Loc_Matrix(double h, double gamma, vector<vector<double>>& 
 	return 0;
 }
 
+// Матрица жёсткости
 int f_elem_method::G_Loc_Matrix(double h, double lamdda1, double lamdda2, vector<vector<double>>& G_loc)
 {
 	double k = (lamdda1 + lamdda2) / (2 * h);
@@ -114,6 +124,7 @@ int f_elem_method::G_Loc_Matrix(double h, double lamdda1, double lamdda2, vector
 	return 0;
 }
 
+// Локальный вектор
 int f_elem_method::b_Loc(double h, double f1, double f2, vector<double>& b_loc)
 {
 	double k = h / 6;
@@ -122,6 +133,7 @@ int f_elem_method::b_Loc(double h, double f1, double f2, vector<double>& b_loc)
 	return 0;
 }
 
+// Построение локальной матрицы
 int f_elem_method::Loc_Matrix(vector<vector<double>>& A_loc, vector<double>& b_loc, int id)
 {
 	double h = grid[id + 1] - grid[id];
@@ -138,6 +150,7 @@ int f_elem_method::Loc_Matrix(vector<vector<double>>& A_loc, vector<double>& b_l
 	return 0;
 }
 
+// Глобальная матрица, построение
 int f_elem_method::End_Matrix()
 {
 	int n = grid.size();
@@ -147,16 +160,19 @@ int f_elem_method::End_Matrix()
 	f.clear();
 	f.resize(n);
 
+	// Локальная матрица 
 	vector<vector<double>> A_loc(2);
 
 	A_loc[0].resize(2);
 	A_loc[1].resize(2);
+	// Вектор
 	vector<double> b_loc(2);
 	for (int i = 0; i < n; i++)
 		A[i].resize(3);
 
 	for (int i = 0; i < n - 1; i++)
 	{
+		// Построение локальной матрицы
 		Loc_Matrix(A_loc, b_loc, i);
 		A[i][1] += A_loc[0][0];
 		A[i][2] += A_loc[0][1];
@@ -235,9 +251,11 @@ double f_elem_method::Get_Disparity()
 
 int f_elem_method::Decision_task(string file)
 {
+	// Созданме сетки
 	Create_grid(file);
 	int iter;
 	double stop = 10;
+	// Глобальная матрица, построение
 	End_Matrix();
 	Decision t(A, f);
 	if (t.LU_f())
@@ -248,6 +266,7 @@ int f_elem_method::Decision_task(string file)
 
 	for (iter = 0; iter < MAXITER; iter++)
 	{
+	
 		stop = Get_Disparity();
 		cout << iter << " " << sqrt(stop) << endl;
 		if (stop > EPS * EPS)

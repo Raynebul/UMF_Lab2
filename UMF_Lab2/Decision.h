@@ -7,7 +7,7 @@ using namespace std;
 class Decision
 {
 	double eps = 1E-10;
-
+	// матрица хранится в ленточном формате
 	vector<vector<double>> A;
 	vector<double> f;
 	int Ahead();
