@@ -1,6 +1,6 @@
 #include "Decision.h"
 
-
+//g
 // Конструктор
 Decision::Decision(vector<vector<double>>& _A, vector<double>& _f)
 {

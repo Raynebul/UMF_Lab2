@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <iostream>
-
+//g
 using namespace std;
 
 class Decision

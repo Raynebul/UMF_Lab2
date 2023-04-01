@@ -9,7 +9,7 @@ using namespace std;
 
 class f_elem_method
 {
-	// сетка
+	// сеткав
 	vector<double> grid;
 	// Матрица
 	vector<vector<double>> A;

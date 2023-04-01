@@ -1,6 +1,6 @@
 #include "Base.h"
 #include "Decision.h"
-
+//g
 int main()
 {
 	f_elem_method t;

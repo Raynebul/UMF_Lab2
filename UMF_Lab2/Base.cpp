@@ -263,7 +263,7 @@ int f_elem_method::Decision_task(string file)
 		cout << "LU-factorization failed" << endl;
 		return -1;
 	}
-
+	//g
 	for (iter = 0; iter < MAXITER; iter++)
 	{
 	
