@@ -2,8 +2,11 @@
 
 double f_elem_method::fun(double x, double u)
 {
+	// !!!Проверить тут!!! для неравномерной сетки
 	// Сходимость
-	return x;                               // U = const
+	return -12*x*x+u;
+	//return -2 * (x * x / u) + u;
+	//return -12*x*x + u;                               // U = const
 	//return u;                             // U = x
 }
 
@@ -19,13 +22,13 @@ double f_elem_method::d_fun(double x, double x1, double x2, double q1, double q2
 	{
 	case 1:// производная по первой переменной
 		//численная производная
-		res = 1;
-		//res = psi1; // f = u
+		res = 0;
+		//res = psi_1; // f = u
 		break;
 
 	case 2: //производная по 2 переменной
-		res = 1;
-		//res = psi2; // f = u
+		res = 0;
+		//res = psi_2; // f = u
 		break;
 
 	default:
@@ -71,7 +74,7 @@ int f_elem_method::Create_grid(string filename)
 				grid[curr_count_x + p] = grid[curr_count_x] + h_x * p;
 			curr_count_x += N_x;
 		}
-		// если неравномерная
+		// если неравномерная сетка
 		else
 		{
 			h_x = (X - grid[curr_count_x]) * (k_x - 1) / (pow(k_x, N_x) - 1);
@@ -87,7 +90,7 @@ int f_elem_method::Create_grid(string filename)
 		cout << "Step " << h_x << endl;
 	}
 
-	cout.imbue(locale("Russian"));
+	//cout.imbue(locale("Russian"));
 	for (int i = 0; i < grid.size(); i++)
 		cout << grid[i] << endl;
 
@@ -235,17 +238,17 @@ double f_elem_method::Get_Disparity()
 		temp = A[i][0] * q0[i - 1];
 		temp += A[i][1] * q0[i];
 		temp += A[i][2] * q0[i + 1];
-		stop += (temp - f[i]) * (temp - f[i]);
+		stop += (temp - f[i]) * (temp - f[i]); // ||a-f||
 	}
 
 	temp = A[k][0] * q0[k - 1];
 	temp += A[k][1] * q0[k];
-	stop += (temp - f[k]) * (temp - f[k]);
+	stop += (temp - f[k]) * (temp - f[k]); // ||a-f||
 
 	temp = 0;
 	for (int i = 0; i < grid.size(); i++)
-		temp += f[i] * f[i];
-	stop /= temp; // eps
+		temp += f[i] * f[i]; // ||f||
+	stop /= temp; // eps ||a-f||/||f||
 	return stop;
 }
 
@@ -269,7 +272,7 @@ int f_elem_method::Decision_task(string file)
 	
 		stop = Get_Disparity();
 		cout << iter << " " << sqrt(stop) << endl;
-		if (stop > EPS * EPS)
+		if (stop > EPS*EPS)
 		{
 			q1 = q0;
 			t.Answer(q0);
