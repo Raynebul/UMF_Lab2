@@ -4,7 +4,7 @@ double f_elem_method::fun(double x, double u)
 {
 	// !!!Проверить тут!!! для неравномерной сетки
 	// Сходимость
-	return -12*x*x+u;
+	return -2*x*x/u+u;
 	//return -2 * (x * x / u) + u;
 	//return -12*x*x + u;                               // U = const
 	//return u;                             // U = x
@@ -22,12 +22,14 @@ double f_elem_method::d_fun(double x, double x1, double x2, double q1, double q2
 	{
 	case 1:// производная по первой переменной
 		//численная производная
-		res = 0;
+		res = psi_1;
+		//res = 0;
 		//res = psi_1; // f = u
 		break;
 
 	case 2: //производная по 2 переменной
-		res = 0;
+		//res = 0;
+		res = psi_2;
 		//res = psi_2; // f = u
 		break;
 
@@ -66,6 +68,7 @@ int f_elem_method::Create_grid(string filename)
 	{
 		in >> X >> N_x >> k_x;
 		double h_x;
+		k_x = sqrt(sqrt(k_x));
 		// если равномерная сетка
 		if (k_x == 1)
 		{
@@ -266,16 +269,19 @@ int f_elem_method::Decision_task(string file)
 		cout << "LU-factorization failed" << endl;
 		return -1;
 	}
-	//g
+	q0 = f;
 	for (iter = 0; iter < MAXITER; iter++)
 	{
 	
 		stop = Get_Disparity();
 		cout << iter << " " << sqrt(stop) << endl;
-		if (stop > EPS*EPS)
+		if (stop > EPS)
 		{
+			//Decision t1(A, f);
+			//End_Matrix();
+			//t.LU_f();
 			q1 = q0;
-			t.Answer(q0);
+			t.SLAU(q0);
 			for (int i = 0; i < q0.size(); i++)
 				q0[i] = q1[i] + w * (q0[i] - q1[i]);
 			Get_f(); // т.к. матрица А не меняется в зависимости от u, ее пересчитывать не будем

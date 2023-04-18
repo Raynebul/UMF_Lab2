@@ -10,13 +10,13 @@ class Decision
 	// матрица хранится в ленточном формате
 	vector<vector<double>> A;
 	vector<double> f;
-	int Ahead();
-	int Back();
+	int AheadGauss();
+	int BackGauss();
 
 public:
 	int LU_f();
 	void Change_f(vector<double>& _f);
 	Decision(vector<vector<double>>& _A, vector<double>& _f);
-	int Answer(vector<double>& q);
+	int SLAU(vector<double>& q);
 };
 

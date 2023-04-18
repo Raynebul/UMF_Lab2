@@ -18,8 +18,8 @@ class f_elem_method
 
 	int MAXITER = 10000;
 	double f1, fn; // bounder
-	double EPS = 1E-10;
-	double w = 0.6;
+	double EPS = 1E-15;
+	double w = 1;
 
 	double lambda(double x);
 	double gamma(double x);
