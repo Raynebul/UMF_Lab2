@@ -4,7 +4,7 @@ double f_elem_method::fun(double x, double u)
 {
 	// !!!ѕроверить тут!!! дл€ неравномерной сетки
 	// —ходимость
-	return -2*x*x/u+u;
+	return 0;
 	//return -2 * (x * x / u) + u;
 	//return -12*x*x + u;                               // U = const
 	//return u;                             // U = x
@@ -202,7 +202,7 @@ int f_elem_method::End_Matrix()
 	return 0;
 }
 
-int f_elem_method::Get_f()
+int f_elem_method::Get_new_f()
 {
 	int n = grid.size();
 	f.clear();
@@ -224,6 +224,51 @@ int f_elem_method::Get_f()
 	// bounder
 	f[0] = f1;
 	f[n - 1] = fn;
+
+	return 0;
+}
+
+int f_elem_method::Get_new_A()
+{
+	int n = grid.size();
+	// удалить A[i]
+	A.clear();
+	A.resize(n);
+	vector<vector<double>> A_loc(2);
+
+	A_loc[0].resize(2);
+	A_loc[1].resize(2);
+	for (int i = 0; i < n; i++)
+		A[i].resize(3);
+	for (int i = 0; i < n - 1; i++)
+	{
+		// ѕостроение локальной матрицы
+		//Loc_Matrix(A_loc, b_loc, i);
+		double h = grid[i + 1] - grid[i];
+		double lambda1 = lambda(grid[i]);
+		double lambda2 = lambda(grid[i + 1]);
+		double gamma1 = gamma(grid[i]);
+		//double f1 = fun(grid[id], q0[id]);
+		//double f2 = fun(grid[id + 1], q0[id + 1]);
+
+		G_Loc_Matrix(h, lambda1, lambda2, A_loc);
+		M_Loc_Matrix(h, gamma1, A_loc);
+		A[i][1] += A_loc[0][0];
+		A[i][2] += A_loc[0][1];
+		A[i + 1][0] += A_loc[1][0];
+		A[i + 1][1] += A_loc[1][1];
+		//f[i] += b_loc[0];
+		//f[i + 1] += b_loc[1];
+	}
+
+	// bounder
+	A[0][0] = 0;
+	A[0][1] = 1;
+	A[0][2] = 0;
+
+	A[n - 1][0] = 0;
+	A[n - 1][1] = 1;
+	A[n - 1][2] = 0;
 
 	return 0;
 }
@@ -269,10 +314,14 @@ int f_elem_method::Decision_task(string file)
 		cout << "LU-factorization failed" << endl;
 		return -1;
 	}
+	//A = t.A;
+	//q0 = f;
+	//q0 = f;
 	q0 = f;
 	for (iter = 0; iter < MAXITER; iter++)
 	{
-	
+		//A = t.A;
+
 		stop = Get_Disparity();
 		cout << iter << " " << sqrt(stop) << endl;
 		if (stop > EPS)
@@ -280,12 +329,22 @@ int f_elem_method::Decision_task(string file)
 			//Decision t1(A, f);
 			//End_Matrix();
 			//t.LU_f();
+
 			q1 = q0;
 			t.SLAU(q0);
+			//End_Matrix();
+			
 			for (int i = 0; i < q0.size(); i++)
 				q0[i] = q1[i] + w * (q0[i] - q1[i]);
-			Get_f(); // т.к. матрица ј не мен€етс€ в зависимости от u, ее пересчитывать не будем
+				
+			Get_new_A();
+			Get_new_f(); // т.к. матрица ј не мен€етс€ в зависимости от u, ее пересчитывать не будемэ
+			t.A = A;
+			//t.f = f;			
+			t.LU_f();
+			//A = t.A;
 			t.Change_f(f);
+			
 		}
 		else
 			return iter;

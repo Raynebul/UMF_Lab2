@@ -41,7 +41,8 @@ class f_elem_method
 	int End_Matrix();
 
 	// 
-	int Get_f();
+	int Get_new_f();
+	int Get_new_A();
 	// Создание сетки
 	int Create_grid(string file);
 	double Get_Disparity();
