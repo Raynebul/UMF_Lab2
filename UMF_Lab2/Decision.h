@@ -19,6 +19,7 @@ public:
 	vector<double> f;
 	void Change_f(vector<double>& _f);
 	Decision(vector<vector<double>>& _A, vector<double>& _f);
+
 	int SLAU(vector<double>& q);
 };
 

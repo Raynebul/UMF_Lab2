@@ -22,14 +22,14 @@ double f_elem_method::d_fun(double x, double x1, double x2, double q1, double q2
 	{
 	case 1:// производная по первой переменной
 		//численная производная
-		res = psi_1;
-		//res = 0;
+		//res = psi_1;
+		res = 0;
 		//res = psi_1; // f = u
 		break;
 
 	case 2: //производная по 2 переменной
-		//res = 0;
-		res = psi_2;
+		res = 0;
+		//res = psi_2;
 		//res = psi_2; // f = u
 		break;
 
@@ -324,7 +324,7 @@ int f_elem_method::Decision_task(string file)
 
 		stop = Get_Disparity();
 		cout << iter << " " << sqrt(stop) << endl;
-		if (stop > EPS)
+		if (stop > EPS*EPS)
 		{
 			//Decision t1(A, f);
 			//End_Matrix();
@@ -338,13 +338,144 @@ int f_elem_method::Decision_task(string file)
 				q0[i] = q1[i] + w * (q0[i] - q1[i]);
 				
 			Get_new_A();
-			Get_new_f(); // т.к. матрица А не меняется в зависимости от u, ее пересчитывать не будемэ
+			Get_new_f(); 
 			t.A = A;
 			//t.f = f;			
 			t.LU_f();
 			//A = t.A;
 			t.Change_f(f);
 			
+		}
+		else
+			return iter;
+	}
+	return iter;
+}
+
+int f_elem_method::Loc_Matrix_Newton(vector<vector<double>>& A_loc, vector<double>& b_loc, int id)
+{
+	double h = grid[id + 1] - grid[id];
+	double lambda_1 = lambda(grid[id]);
+	double lambda_2 = lambda(grid[id + 1]);
+	double gamma_1 = gamma(grid[id]);
+	double f1 = fun(grid[id], q0[id]);
+	double f2 = fun(grid[id + 1], q0[id + 1]);
+	double f0_q0 = d_fun(grid[id], grid[id], grid[id + 1], q0[id], q0[id + 1], 1);
+	double f1_q1 = d_fun(grid[id + 1], grid[id], grid[id + 1], q0[id], q0[id + 1], 2);
+
+	G_Loc_Matrix(h, lambda_1, lambda_2, A_loc);
+	M_Loc_Matrix(h, gamma_1, A_loc);
+
+	A_loc[0][0] -= h / 6 * (2 * f0_q0); // db(0)/dq(0)
+	A_loc[0][1] -= h / 6 * (f1_q1); // db(0)/dq(1)
+	A_loc[1][0] -= h / 6 * (f0_q0); // db(1)/dq(0)
+	A_loc[1][1] -= h / 6 * (2 * f1_q1); // db(1)/dq(1)
+
+	b_Loc(h, f1, f2, b_loc);
+
+	b_loc[0] -= q0[id] * (h / 6 * (2 * f0_q0)) + q0[id + 1] * (h / 6 * (f1_q1));
+	b_loc[1] -= q0[id] * (h / 6 * (f0_q0)) + q0[id + 1] * (h / 6 * (2 * f1_q1));
+
+	return 0;
+}
+
+int f_elem_method::End_Matrix_Newton()
+{
+	int n = grid.size();
+	A.clear();
+	A.resize(n);
+	f.clear();
+	f.resize(n);
+	vector<vector<double>> A_loc(2);
+	A_loc[0].resize(2);
+	A_loc[1].resize(2);
+	vector<double> b_loc(2);
+	for (int i = 0; i < n; i++)
+		A[i].resize(3);
+
+	for (int i = 0; i < n - 1; i++)
+	{
+		Loc_Matrix_Newton(A_loc, b_loc, i);
+		A[i][1] += A_loc[0][0];
+		A[i][2] += A_loc[0][1];
+		A[i + 1][0] += A_loc[1][0];
+		A[i + 1][1] += A_loc[1][1];
+		f[i] += b_loc[0];
+		f[i + 1] += b_loc[1];
+	}
+
+	// граничные
+	A[0][0] = 0;
+	A[0][1] = 1;
+	A[0][2] = 0;
+	f[0] = f1;
+
+	A[n - 1][0] = 0;
+	A[n - 1][1] = 1;
+	A[n - 1][2] = 0;
+	f[n - 1] = fn;
+
+	return 0;
+}
+
+int f_elem_method::Get_f_Newton()
+{
+	int n = grid.size();
+	f.clear();
+	f.resize(n);
+
+	vector<double> b_loc(2);
+
+	for (int i = 0; i < n - 1; i++)
+	{
+		double f0_q0 = d_fun(grid[i], grid[i], grid[i + 1], q0[i], q0[i + 1], 1);
+		double f0_q1 = d_fun(grid[i], grid[i], grid[i + 1], q0[i], q0[i + 1], 2);
+		double f1_q0 = d_fun(grid[i + 1], grid[i], grid[i + 1], q0[i], q0[i + 1], 1);
+		double f1_q1 = d_fun(grid[i + 1], grid[i], grid[i + 1], q0[i], q0[i + 1], 2);
+
+		double h = grid[i + 1] - grid[i];
+		double f1 = fun(grid[i], q0[i]);
+		double f2 = fun(grid[i + 1], q0[i + 1]);
+
+		b_Loc(h, f1, f2, b_loc);
+		b_loc[0] -= q0[i] * (1 / 6 * (2 * f0_q0 + f1_q0)) + q0[i + 1] * (1 / 6 * (2 * f0_q1 + f1_q1));
+		b_loc[1] -= q0[i] * (1 / 6 * (f0_q0 + 2 * f1_q0)) + q0[i + 1] * (1 / 6 * (f0_q1 + 2 * f1_q1));
+
+		f[i] += b_loc[0];
+		f[i + 1] += b_loc[1];
+	}
+
+	// граничные
+	f[0] = f1;
+	f[n - 1] = fn;
+
+	return 0;
+}
+
+int f_elem_method::Decision_task_Newton(string file)
+{
+	Create_grid(file);
+	int iter;
+	double stop = 10;
+
+	for (iter = 0; iter < MAXITER; iter++)
+	{
+		End_Matrix_Newton();
+		stop = Get_Disparity();
+		cout << sqrt(stop) << endl;
+		if (stop > EPS * EPS)
+		{
+			Decision t(A, f);
+			if (t.LU_f())
+			{
+				cout << "LU-factorization failed" << endl;
+				return -1;
+			}
+			q1 = q0;
+			t.SLAU(q0);
+			/*
+			for (int i = 0; i < q0.size(); i++)
+				q0[i] = q1[i] + w * (q0[i] - q1[i]); */
 		}
 		else
 			return iter;

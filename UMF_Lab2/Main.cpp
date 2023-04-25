@@ -5,8 +5,8 @@ int main()
 {
 	f_elem_method t;
 	// метод простой итерации
-	int iter1 = t.Decision_task("Test.txt");
-
+	//int iter1 = t.Decision_task("Test.txt");
+	int iter1 = t.Decision_task_Newton("Test.txt");
 	ofstream fout("fout.txt");
 	fout.precision(16); //16 знаков
 	//fout.imbue(locale("Russian")); // , => .
