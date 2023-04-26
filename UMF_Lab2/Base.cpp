@@ -4,7 +4,7 @@ double f_elem_method::fun(double x, double u)
 {
 	// !!!Проверить тут!!! для неравномерной сетки
 	// Сходимость
-	return 0;
+	return -12*x*x+u;
 	//return -2 * (x * x / u) + u;
 	//return -12*x*x + u;                               // U = const
 	//return u;                             // U = x
